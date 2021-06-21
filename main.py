@@ -27,34 +27,43 @@ class LaughingmanApplication():
         self.height = 0
         self.fps = 0
 
-    def capture_start_process(self):
+    def capture_setting(self):
         print('setting start')
-        self.capture = cv2.VideoCapture(0)
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         self.width = self.capture.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.htight = self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self.fps = self.capture.get(cv2.CAP_PROP_FPS)
-        print('setting complete')
+        print('setting was complete')
+
+    def start_capture_process(self):
+        print('start capture process')
+        self.capture = cv2.VideoCapture(0)
+        self.capture_setting()
+        print('capture process was complete')
 
     def capture_loop(self):
         print('loop start')
         while self.capture.isOpened():
             ret, frame = self.capture.read()
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                print('confirmed input "q"\nloop finish')
                 break
             cv2.imshow('capture', frame)
-        print('loop finish')
 
-    def capture_stop_process(self):
-        print('stop process is start')
+    def capture_release_process(self):
+        print('start release process')
         self.capture.release()
         cv2.destroyAllWindows()
-        print('stop process is complete')
+        print('release process was complete')
+
+    def run(self):
+        self.start_capture_process()
+        self.capture_loop()
+        self.capture_release_process()
 
 
 if __name__ == '__main__':
     app = LaughingmanApplication()
-    app.capture_start_process()
-    app.capture_loop()
-    app.capture_stop_process()
+    app.run()
+    del app
