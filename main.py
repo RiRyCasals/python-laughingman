@@ -12,14 +12,13 @@ laughingman_inner = cv2.imread(
     './input/laughingman-inner.png', cv2.IMREAD_UNCHANGED)
 laughingman_frame = cv2.imread(
     './input/laughingman-frame.png', cv2.IMREAD_UNCHANGED)
-laughingman_running_mark = cv2.resize(
-    cv2.imread('./input/laughingman.png'), (100, 100))
+running_mark = cv2.imread('./input/running-mark.jpg')
 
 
 class LaughingmanApplication():
     def __init__(self):
         self.capture_padding_pixel = 150
-        self.capture_resize_scale = 2
+        self.capture_resize_scale = 1
         self.laughingman_expansion_pixel = 25
         self.rotation_angle = 0
         self.capture = None
@@ -49,7 +48,7 @@ class LaughingmanApplication():
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 print('confirmed input "q"\nloop finish')
                 break
-            cv2.imshow('capture', frame)
+            cv2.imshow('LaughingmanApp', running_mark)
 
     def capture_release_process(self):
         print('start release process')
@@ -66,4 +65,3 @@ class LaughingmanApplication():
 if __name__ == '__main__':
     app = LaughingmanApplication()
     app.run()
-    del app
