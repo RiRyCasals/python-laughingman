@@ -9,10 +9,10 @@ cascade_frontalface = cv2.CascadeClassifier(
 cascade_profileface = cv2.CascadeClassifier(
     './haarcascades/haarcascade_profileface.xml')
 
-laughingman_inner = cv2.imread(
-    './input/laughingman-inner.png', cv2.IMREAD_UNCHANGED)
 laughingman_frame = cv2.imread(
     './input/laughingman-frame.png', cv2.IMREAD_UNCHANGED)
+laughingman_inner = cv2.imread(
+    './input/laughingman-inner.png', cv2.IMREAD_UNCHANGED)
 running_mark = cv2.imread('./input/running-mark.jpg')
 
 laughingman_center = (int(laughingman_frame.shape[0] / 2),
@@ -23,7 +23,7 @@ class LaughingmanApplication():
         self.capture_padding_pixel = 150
         self.capture_resize_scale = 1
         self.laughingman_expansion_pixel = 25
-        self.rotation_angle_degree = 0
+        self.rotation_angle_degree = 1 # test, default is 0
         self.capture = None
         self.width = 0
         self.height = 0
@@ -33,10 +33,15 @@ class LaughingmanApplication():
         print('setting start') #dev
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        self.width = self.capture.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.htight = self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self.fps = self.capture.get(cv2.CAP_PROP_FPS)
+        self.width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.fps = int(self.capture.get(cv2.CAP_PROP_FPS))
         print('setting was complete') #dev
+
+    def run(self):
+        self.start_capture_process()
+        self.capture_loop()
+        self.capture_release_process()
 
     def start_capture_process(self):
         print('start capture process') #dev
@@ -44,12 +49,18 @@ class LaughingmanApplication():
         self.capture_setting()
         print('capture process was complete') #dev
 
+    def capture_release_process(self):
+        print('start release process') #dev
+        self.capture.release()
+        cv2.destroyAllWindows()
+        print('release process was complete') #dev
+
     def capture_loop(self):
         print('loop start') #dev
         capture_padding = 2 * self.capture_padding_pixel
-        with pyvirtualcam.Camera(int(self.width * capture_padding),
-                                 int(self.height * capture_padding),
-                                 int(self.fps)
+        with pyvirtualcam.Camera(self.width - 2*self.capture_padding_pixel,
+                                 self.height - 2*self.capture_padding_pixel,
+                                 self.fps
                                 ) as virtual_camera:
             while self.capture.isOpened():
                 return_value, frame = self.capture.read()
@@ -62,11 +73,12 @@ class LaughingmanApplication():
 
                 cv2.imshow('LaughingmanApp', running_mark)
 
-                frame = cv2.flip(frame, 1)
-                face_list = obtaine_face_list(frame)
+                face_list = self.obtaine_face_list(frame)
 
-                if face_list == None:
-                    # send(cv2.cvtColor(frame, ))
+                if len(face_list) == 0:
+                    self.send_frame(virtual_camera,
+                                    frame[self.capture_padding_pixel:self.height-self.capture_padding_pixel,
+                                    self.capture_padding_pixel:self.width-self.capture_padding_pixel])
                     continue
 
                 for (x, y, w, h) in face_list:
@@ -74,19 +86,27 @@ class LaughingmanApplication():
                     y -= self.laughingman_expansion_pixel
                     w += 2 * self.laughingman_expansion_pixel
                     h += 2 * self.laughingman_expansion_pixel
+
+                    if x < 0:
+                        x = 0
+                    if y < 0:
+                        y = 0
+
+                    laughingman_rotated = self.rotation(laughingman_frame)
+                    laughingman_frame_resized = cv2.resize(laughingman_rotated, (w, h))
                     laughingman_inner_resized = cv2.resize(laughingman_inner, (w, h))
-                    laughingman_frame_resized = cv2.resize(self.rotation(laughingman_frame), (w, h))
 
-    def capture_release_process(self):
-        print('start release process') #dev
-        self.capture.release()
-        cv2.destroyAllWindows()
-        print('release process was complete') #dev
+                    if x+w > self.width:
+                        w = self.width - x
+                    if y+h > self.height:
+                        h = self.height- y
 
-    def run(self):
-        self.start_capture_process()
-        self.capture_loop()
-        self.capture_release_process()
+                    frame[y:y+h, x:x+w] = self.overlay_image(frame[y:y+h, x:x+w], laughingman_frame_resized[:h, :w])
+                    frame[y:y+h, x:x+w] = self.overlay_image(frame[y:y+h, x:x+w], laughingman_inner_resized[:h, :w])
+
+                self.send_frame(virtual_camera,
+                                frame[self.capture_padding_pixel:self.height-self.capture_padding_pixel,
+                                      self.capture_padding_pixel:self.width-self.capture_padding_pixel])
 
     def obtaine_face_list(self, frame):
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -96,15 +116,27 @@ class LaughingmanApplication():
         face_list = cascade_profileface.detectMultiScale(frame_gray, minSize=(100, 100))        
         if len(face_list) != 0:
             return face_list
-        return None
+        face_list = cascade_profileface.detectMultiScale(cv2.flip(frame_gray, 1), minSize=(100, 100))        
+        if len(face_list) != 0:
+            return face_list
+        return list()
     
     def rotation(self, image):
-        rotation_matrix = cv2.getRotationMatrix2D(laughingman_center, self.degree, 1)
+        rotation_matrix = cv2.getRotationMatrix2D(laughingman_center, self.rotation_angle_degree, 1)
+        self.rotation_angle_degree += 1
+        if self.rotation_angle_degree >= 360: # test
+            self.rotation_angle_degree = 0
         return cv2.warpAffine(image, rotation_matrix, (image.shape[0], image.shape[1]))
 
-    def overlay_images(self):
-        pass
-
+    def overlay_image(self, frame, image):
+        image[:, :, 3:] = image[:, :, 3:]/255
+        return frame[:, :] * (1 - image[:, :, 3:]) + image[:, :, :3] * (image[:, :, 3:])
+    
+    def send_frame(self, virtual_camera, frame):
+        frame = cv2.flip(frame, 1)
+        virtual_camera.send(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        virtual_camera.sleep_until_next_frame()
+        
 
 if __name__ == '__main__':
     app = LaughingmanApplication()
