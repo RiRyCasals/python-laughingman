@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import pyvirtualcam
 # from functools import lru_cashe
+import time
 
 
 cascade_frontalface = cv2.CascadeClassifier(
@@ -30,26 +31,34 @@ class LaughingmanApplication():
         self.fps = 0
 
     def capture_setting(self):
+        print('setting start...')
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         self.width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.fps = int(self.capture.get(cv2.CAP_PROP_FPS))
+        print('setting complete')
 
     def run(self):
+        print('application start...')
         self.start_capture_process()
         self.capture_loop()
         self.capture_release_process()
+        print('application finish')
 
     def start_capture_process(self):
+        print('capture start...')
         self.capture = cv2.VideoCapture(0)
         self.capture_setting()
 
     def capture_release_process(self):
+        print('capture release...')
         self.capture.release()
         cv2.destroyAllWindows()
+        print('release complete')
 
     def capture_loop(self):
+        print('broadcast start...')
         capture_padding = 2 * self.capture_padding_pixel
         with pyvirtualcam.Camera(self.width - 2*self.capture_padding_pixel,
                                  self.height - 2*self.capture_padding_pixel,
@@ -100,6 +109,10 @@ class LaughingmanApplication():
                                 frame[self.capture_padding_pixel:self.height-self.capture_padding_pixel,
                                       self.capture_padding_pixel:self.width-self.capture_padding_pixel])
 
+        print('camera close...')
+        virtual_camera.close()
+        print('close complete')
+
     def obtaine_face_list(self, frame):
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         face_list = cascade_frontalface.detectMultiScale(frame_gray, minSize=(100,100))
@@ -116,7 +129,7 @@ class LaughingmanApplication():
     def rotation(self, image):
         rotation_matrix = cv2.getRotationMatrix2D(laughingman_center, self.rotation_angle_degree, 1)
         self.rotation_angle_degree += 1
-        if self.rotation_angle_degree >= 360: # test
+        if self.rotation_angle_degree >= 360:
             self.rotation_angle_degree = 0
         return cv2.warpAffine(image, rotation_matrix, (image.shape[0], image.shape[1]))
 
