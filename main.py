@@ -23,20 +23,18 @@ class LaughingmanApplication():
         self.capture_padding_pixel = 150
         self.capture_resize_scale = 1
         self.laughingman_expansion_pixel = 25
-        self.rotation_angle_degree = 1 # test, default is 0
+        self.rotation_angle_degree = 0
         self.capture = None
         self.width = 0
         self.height = 0
         self.fps = 0
 
     def capture_setting(self):
-        print('setting start') #dev
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         self.width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.fps = int(self.capture.get(cv2.CAP_PROP_FPS))
-        print('setting was complete') #dev
 
     def run(self):
         self.start_capture_process()
@@ -44,19 +42,14 @@ class LaughingmanApplication():
         self.capture_release_process()
 
     def start_capture_process(self):
-        print('start capture process') #dev
         self.capture = cv2.VideoCapture(0)
         self.capture_setting()
-        print('capture process was complete') #dev
 
     def capture_release_process(self):
-        print('start release process') #dev
         self.capture.release()
         cv2.destroyAllWindows()
-        print('release process was complete') #dev
 
     def capture_loop(self):
-        print('loop start') #dev
         capture_padding = 2 * self.capture_padding_pixel
         with pyvirtualcam.Camera(self.width - 2*self.capture_padding_pixel,
                                  self.height - 2*self.capture_padding_pixel,
@@ -68,7 +61,6 @@ class LaughingmanApplication():
                 if return_value == False:
                     break
                 if cv2.waitKey(1) & 0xFF == ord('q'):
-                    print('confirmed input "q"\nloop finish') #dev
                     break
 
                 cv2.imshow('LaughingmanApp', running_mark)
