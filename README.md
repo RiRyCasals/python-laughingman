@@ -20,3 +20,10 @@
 # How to close
 
 "LaughingmanApp" と書かれたウィンドウで "q" を押すと停止します。
+
+# Feature
+
+- GUIの追加
+- ユーザー設定の追加
+- 各種エラー対策
+- OBS Studio のインストールをせずに利用できるようにする
