@@ -1,8 +1,6 @@
 import numpy as np
 import cv2
 import pyvirtualcam
-# from functools import lru_cashe
-import time
 
 
 cascade_frontalface = cv2.CascadeClassifier(
@@ -118,11 +116,12 @@ class LaughingmanApplication():
         face_list = cascade_frontalface.detectMultiScale(frame_gray, minSize=(100,100))
         if len(face_list) != 0:
             return face_list
-        face_list = cascade_profileface.detectMultiScale(frame_gray, minSize=(100, 100))        
+        face_list = cascade_profileface.detectMultiScale(frame_gray, minSize=(100, 100))
         if len(face_list) != 0:
             return face_list
-        face_list = cascade_profileface.detectMultiScale(cv2.flip(frame_gray, 1), minSize=(100, 100))        
+        face_list = cascade_profileface.detectMultiScale(cv2.flip(frame_gray, 1), minSize=(100, 100))
         if len(face_list) != 0:
+            face_list[:, 0] = self.width - face_list[:, 0] - face_list[:, 2]
             return face_list
         return list()
     
