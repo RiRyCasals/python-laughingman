@@ -1,6 +1,9 @@
 # Laugingman application
 
-会議ツールなどで「笑い男」になれるアプリ
+「笑い男」になれるアプリ
+
+<img src="https://user-images.githubusercontent.com/69512679/156174618-db1826a5-cf79-4ee1-9eb7-8ed8f9a66ed5.gif" width=500>
+
 
 # Environment
 
